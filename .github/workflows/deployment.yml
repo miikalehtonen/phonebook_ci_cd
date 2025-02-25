@@ -39,6 +39,17 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
 
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    needs: simple_deployment_pipeline
+    concurrency: deploy-group
+    if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
       - name: Build frontend
         working-directory: puhelinluettelo
         run: npm run build
@@ -48,19 +59,11 @@ jobs:
           rm -rf puhelinluettelo_be/dist
           cp -r puhelinluettelo/dist puhelinluettelo_be/
 
-  deploy:
-    name: Deploy app
-    runs-on: ubuntu-latest
-    needs: simple_deployment_pipeline
-    concurrency: deploy-group
-    if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-
       - name: Deploy Backend with Fly.io
         working-directory: puhelinluettelo_be
-        run: flyctl deploy --remote-only
+        run: |
+          flyctl secrets set MONGODB_URI=${{ secrets.MONGODB_URI }}
+          flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
