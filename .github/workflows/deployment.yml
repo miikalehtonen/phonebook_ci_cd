@@ -47,7 +47,7 @@ jobs:
         run: |
           rm -rf puhelinluettelo_be/dist
           cp -r puhelinluettelo/dist puhelinluettelo_be/
-          echo "ls -la"
+          ls
 
   deploy:
     name: Deploy app
@@ -62,7 +62,7 @@ jobs:
       - name: Deploy Backend with Fly.io
         working-directory: puhelinluettelo_be
         run: |
-          echo "ls -la"
+          ls
           flyctl secrets set MONGODB_URI=${{ secrets.MONGODB_URI }}
           flyctl deploy --remote-only
         env:
