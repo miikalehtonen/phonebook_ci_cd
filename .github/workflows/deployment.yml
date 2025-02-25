@@ -36,6 +36,8 @@ jobs:
       - name: Test backend
         working-directory: puhelinluettelo_be
         run: npm run test
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
 
       - name: Build frontend
         working-directory: puhelinluettelo
