@@ -73,12 +73,6 @@ jobs:
         working-directory: puhelinluettelo_be
         run: |
           echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
-          echo "Checking files..."
-          ls -la
-          echo "Checking dist..."
-          ls -la dist
-          echo "Checking env..."
-          cat .env || echo "NO .ENV FOUND"
           flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -105,8 +99,8 @@ jobs:
         if: ${{ success() }}
         uses: stegzilla/discord-notify@v2
         with:
-          title: A new version of Puhelinluettelo deployed
-          message: Backend and Frontend updated by ${{ github.actor }}
+          title: A new version of Phonebook deployed
+          message: to https://puhelinluettelo-be.fly.dev/ by ${{ github.actor }}
           include_image: false
           username: GitHub
           avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
