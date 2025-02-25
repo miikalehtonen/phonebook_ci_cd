@@ -74,7 +74,14 @@ jobs:
 
       - name: Deploy Backend with Fly.io
         working-directory: puhelinluettelo_be
-        run: flyctl deploy --remote-only
+        run: |
+          echo "Checking files..."
+          ls -la
+          echo "Checking dist..."
+          ls -la /dist
+          echo "env..."
+          cat .env
+          flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
