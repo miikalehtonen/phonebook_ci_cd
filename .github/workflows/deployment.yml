@@ -39,6 +39,10 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
 
+      - name: Build frontend
+        working-directory: puhelinluettelo
+        run: npm run build
+
   deploy:
     name: Deploy app
     runs-on: ubuntu-latest
@@ -48,13 +52,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Build frontend
-        working-directory: puhelinluettelo
-        run: npm run build
 
       - name: Copy frontend build to backend
         run: |
