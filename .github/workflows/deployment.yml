@@ -68,15 +68,10 @@ jobs:
         run: |
           rm -rf puhelinluettelo_be/dist
           cp -r puhelinluettelo/dist puhelinluettelo_be/
-          echo "LIST BE DIR"
-          ls -la puhelinluettelo_be
-          echo "LIST DIST DIR"
-          ls -la puhelinluettelo_be/dist || echo "NO DIST FOUND"
 
       - name: Deploy Backend with Fly.io
         working-directory: puhelinluettelo_be
         run: |
-          ls -la dist || echo "NO DIST FOUND"
           flyctl secrets set MONGODB_URI=${{ secrets.MONGODB_URI }}
           flyctl deploy --remote-only
         env:
