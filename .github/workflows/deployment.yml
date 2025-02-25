@@ -43,6 +43,11 @@ jobs:
         working-directory: puhelinluettelo
         run: npm run build
 
+      - name: Copy frontend build to backend
+        run: |
+          rm -rf puhelinluettelo_be/dist
+          cp -r puhelinluettelo/dist puhelinluettelo_be/
+
   deploy:
     name: Deploy app
     runs-on: ubuntu-latest
@@ -52,11 +57,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Copy frontend build to backend
-        run: |
-          rm -rf puhelinluettelo_be/dist
-          cp -r puhelinluettelo/dist puhelinluettelo_be/
 
       - name: Deploy Backend with Fly.io
         working-directory: puhelinluettelo_be
