@@ -1,0 +1,103 @@
+name: Deployment pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+  simple_deployment_pipeline:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        working-directory: puhelinluettelo
+        run: npm install
+
+      - name: Install backend dependencies
+        working-directory: puhelinluettelo_be
+        run: npm install
+
+      - name: Lint backend
+        working-directory: puhelinluettelo_be
+        run: npm run lint
+
+      - name: Lint frontend
+        working-directory: puhelinluettelo
+        run: npm run lint
+
+      - name: Test backend
+        working-directory: puhelinluettelo_be
+        run: npm run test
+
+      - name: Build frontend
+        working-directory: puhelinluettelo
+        run: npm run build
+
+      - name: Copy frontend build to backend
+        run: |
+          rm -rf puhelinluettelo_be/dist
+          cp -r puhelinluettelo/dist puhelinluettelo_be/
+
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    needs: simple_deployment_pipeline
+    concurrency: deploy-group
+    if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy Backend with Fly.io
+        working-directory: puhelinluettelo_be
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  tag_release:
+    name: Bump version and tag release
+    runs-on: ubuntu-20.04
+    needs: [simple_deployment_pipeline, deploy]
+    if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.71.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+
+  notify:
+    name: Notify Discord
+    runs-on: ubuntu-latest
+    needs: [simple_deployment_pipeline, deploy]
+    steps:
+      - name: Notify Discord on Success
+        if: ${{ success() }}
+        uses: stegzilla/discord-notify@v2
+        with:
+          title: A new version of Puhelinluettelo deployed
+          message: Backend and Frontend updated by ${{ github.actor }}
+          include_image: false
+          username: GitHub
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Notify Discord on Failure
+        if: ${{ failure() }}
+        uses: stegzilla/discord-notify@v2
+        with:
+          title: Build failed
+          message: commit ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }} by ${{ github.actor }} broke the build :(
+          include_image: false
+          username: GitHub
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
