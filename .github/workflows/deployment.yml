@@ -39,6 +39,27 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
 
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    needs: simple_deployment_pipeline
+    concurrency: deploy-group
+    if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        working-directory: puhelinluettelo
+        run: npm install
+
+      - name: Install backend dependencies
+        working-directory: puhelinluettelo_be
+        run: npm install
+
       - name: Build frontend
         working-directory: puhelinluettelo
         run: npm run build
@@ -51,16 +72,6 @@ jobs:
           ls -la puhelinluettelo_be
           echo "LIST DIST DIR"
           ls -la puhelinluettelo_be/dist || echo "NO DIST FOUND"
-
-  deploy:
-    name: Deploy app
-    runs-on: ubuntu-latest
-    needs: simple_deployment_pipeline
-    concurrency: deploy-group
-    if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ' '), '#skip') }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy Backend with Fly.io
         working-directory: puhelinluettelo_be
