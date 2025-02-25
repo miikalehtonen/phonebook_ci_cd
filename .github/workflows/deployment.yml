@@ -78,7 +78,7 @@ jobs:
           echo "Checking files..."
           ls -la
           echo "Checking dist..."
-          ls -la /dist
+          ls -la dist
           echo "env..."
           cat .env
           flyctl deploy --remote-only
