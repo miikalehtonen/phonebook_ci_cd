@@ -1,8 +1,3 @@
-# fly.toml app configuration file generated for puhelinluettelo-be on 2025-02-25T01:05:21+02:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
 app = 'puhelinluettelo-be'
 primary_region = 'cdg'
 
